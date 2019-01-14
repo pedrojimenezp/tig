@@ -1,0 +1,96 @@
+version: '3.5'
+
+services:
+  influxdb:
+    image: influxdb
+    container_name: influxdb
+    volumes:
+      - influxdb-data:/var/lib/influxdb
+    ports:
+      - 8083:8083
+      - 8086:8086
+
+  telegraf:
+    image: telegraf
+    container_name: telegraf
+    volumes:
+      - ./telegraf.conf:/etc/telegraf/telegraf.conf:ro
+    ports:
+      - 8125:8125/udp
+    depends_on:
+      - influxdb
+
+  chronograf:
+    image: chronograf
+    container_name: chronograf
+    volumes:
+      - chronograf-data:/var/lib/chronograf
+    ports:
+      - 8888:8888
+    environment:
+      - influxdb-url=http://influxdb:8086
+    depends_on:
+      - influxdb
+
+  grafana:
+    container_name: grafana
+    image: grafana/grafana
+    ports:
+      - 8000:3000
+    volumes:
+      - grafana-data:/var/lib/grafana
+
+  # licensees_mobile_api:
+  #   container_name: licensees_mobile_api
+  #   build: ./mobile-api
+  #   volumes:
+  #     - ./mobile-api/src:/app/src
+  #   ports:
+  #     - '3003:3003'
+  #   command: nodemon src/index.js
+  #   depends_on:
+  #     - licensees_core_api
+  #   environment:
+  #     - LICENSEES_CORE_API_URL=http://licensees_core_api:3000
+  #     - COURSE_SEARCH_CORE_API_URL=https://courses.test.cebroker.com/api
+  # licensees_core_api:
+  #   container_name: licensees_core_api
+  #   build: ./core-api
+  #   volumes:
+  #     - ./core-api/src:/app/src
+  #   ports:
+  #     - '3002:3000'
+  #   depends_on:
+  #     - mongodb
+  #   environment:
+  #     - MONGO_HOST=mongodb
+  #   command: nodemon src/index.js
+  # licensees_internal_api:
+  #   container_name: licensees_internal_api
+  #   build: ./internal-api
+  #   volumes:
+  #     - ./internal-api/src:/app/src
+  #   ports:
+  #     - '3001:3000'
+  #   depends_on:
+  #     - licensees_core_api
+  #     - mongodb
+  #   environment:
+  #     - LICENSEES_CORE_API_URL=http://licensees_core_api:3000
+  #     - COURSE_SEARCH_CORE_API_URL=http://docker.for.mac.localhost:4002
+  #     - MONGO_HOST=mongodb
+  #   command: nodemon src/index.js
+  # licensees_client:
+  #   container_name: licensees_client
+  #   build: ./client
+  #   volumes:
+  #     - ./client/src:/app/src
+  #   ports:
+  #     - '3000:3000'
+  #   depends_on:
+  #     - licensees_internal_api
+
+volumes:
+  influxdb-data: {}
+  chronograf-data: {}
+  grafana-data: {}
